@@ -25,12 +25,14 @@ SECRET_KEY = 'django-insecure-cm^sia%a1pq8hlw^0c_c&t_szkl3aaiixg2lt@zt6)k=e5$#7-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'dids.apps.DidsConfig',
+    'votings.apps.VotingConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
