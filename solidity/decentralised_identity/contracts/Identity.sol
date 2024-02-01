@@ -2,31 +2,27 @@
 pragma solidity ^0.8.0;
 
 contract DecentralizedIdentity {
-    struct UserData {
+    struct Identity {
         // IPFS hash holding some user's data
-        string ipfshash;
-        }
+        string Identityipfs;
+    }
     
-    struct CredentialRequests {
-        string ipfshash;
+    mapping(address => Identity) public identities;
+    // mapping(address => UserData[]) public userIdentities;
+
+    event IdentityRegistered(address indexed user, string identity);
+    event RequestCreated(address indexed user);
+
+    // Creating and retrieving user data
+    function createIdentity(string memory _Identityipfs) external {
+        require(bytes(identities[msg.sender].Identityipfs).length == 0, "Identity already registered");
+        require(bytes(_Identityipfs).length > 0, "Identity cannot be empty");
+
+        identities[msg.sender] = Identity(_Identityipfs);
+        emit IdentityRegistered(msg.sender, _Identityipfs);
     }
 
-
-    mapping(address => UserData[]) public userIdentities;
-
-
-
-    function createIdentity(string memory _ipfshash) public {
-        userIdentities[msg.sender].push(UserData(_ipfshash));
-    }
-
-    function getAllIdentities(address _user) public view returns (UserData[] memory) {
-        return userIdentities[_user];
-    }
-
-    function getIdentity(address _user, uint256 _index) public view returns (string memory) {
-        require(_index < userIdentities[_user].length, "Identity index out of bounds");
-        UserData memory identity = userIdentities[_user][_index];
-        return (identity.ipfshash);
+    function getIdentity() external view returns (string memory) {
+        return identities[msg.sender].Identityipfs;
     }
 }
