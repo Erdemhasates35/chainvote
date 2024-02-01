@@ -29,7 +29,7 @@ class CreateIdentity(APIView):
         ipfshash = client.add_json(data)
         # call smart contract and save ipfs hash
         contract = web3.eth.contract(address=contract_address, abi=contract_abi)
-        tx_hash = contract.functions.createIdentity(ipfshash).transact({'from': '0x9dF6993313a6b59663cf54b2D86A16fD7545A320'})
+        tx_hash = contract.functions.createIdentity(ipfshash).transact({'from': f'{owner}'})
         tx_data = web3.eth.wait_for_transaction_receipt(tx_hash)
         resp = {
             "txn":f"{tx_data}"
