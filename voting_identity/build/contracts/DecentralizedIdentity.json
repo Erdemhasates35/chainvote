@@ -23,7 +23,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -62,7 +63,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -86,7 +88,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     }
   ],
   "metadata": "{\"compiler\":{\"version\":\"0.8.19+commit.7dd6d404\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_ipfshash\",\"type\":\"string\"}],\"name\":\"createIdentity\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"getAllIdentities\",\"outputs\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"ipfshash\",\"type\":\"string\"}],\"internalType\":\"struct DecentralizedIdentity.UserData[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_index\",\"type\":\"uint256\"}],\"name\":\"getIdentity\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"userIdentities\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"ipfshash\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/Identity.sol\":\"DecentralizedIdentity\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/Identity.sol\":{\"keccak256\":\"0xf1edc141c7f12eef06af7aaf3d0dba2f03ce96401877b9f7491f6316588bf2a2\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://b9401d91992dc1c31f9f3e2aac45416276096d327b938e9fa6e4222fe23351dd\",\"dweb:/ipfs/QmSfDpdMJCGndMSDzTLiwiH7jsVyWvxDqUQNhUoS1Wqohn\"]}},\"version\":1}",
@@ -8987,12 +8990,13 @@
     "5777": {
       "events": {},
       "links": {},
-      "address": "0xf9eec06980Ef79Df610f7Df49fc31342d4B0D383",
-      "transactionHash": "0x1f790a0f08a301a078b0c95a50f478efedc82973c12154e711d7d6fb9486f59e"
+      "address": "0xC40Cb3C4A472d8FB9f048916403F811Da1eA9eDb",
+      "transactionHash": "0x704a599c96c87dbc2b3ea33d2a6ef71d971b909d3070e4ceff8b1ba1cc06d024"
     }
   },
   "schemaVersion": "3.4.16",
-  "updatedAt": "2024-02-01T22:29:11.029Z",
+  "updatedAt": "2024-02-01T22:40:35.990Z",
+  "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",
     "methods": {},
