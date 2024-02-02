@@ -11,7 +11,7 @@ with open(contract_file, 'r') as file:
     data = json.load(file)
 
 voting_abi = data['abi']
-contract_address = '0xfd1a9d2759fE9E4b641194408Eb1C8fa4624B8Cd'
+contract_address = '0x222b9C0F4739506650538F1B7a0a1ed547Ea93E4'
 
 # Create a contract instance
 contract = w3.eth.contract(address=contract_address, abi=voting_abi)
@@ -39,12 +39,17 @@ def vote(request):
 
     function = contract.functions.Vote(candidate_id)
 
-    # Build transaction parameters
-    nonce = w3.eth.getTransactionCount(sender_address)
+    # # Build transaction parameters
+    nonce = w3.eth.get_transaction_count(sender_address)
     gas_price = w3.eth.gas_price
-    gas_limit = 100000  # Adjust gas limit based on your contract's complexity
 
-    transaction = function.buildTransaction({
+    # Estimate gas for the transaction
+    gas_estimate = function.estimate_gas({'from': sender_address})
+
+    gas_limit = 100000  # Adjust gas limit based on your contract's complexity
+    gas_limit = max(gas_limit, gas_estimate)
+    
+    transaction = function.build_transaction({
         'gas': gas_limit,
         'gasPrice': gas_price,
         'nonce': nonce,
@@ -55,9 +60,9 @@ def vote(request):
     signed_transaction = w3.eth.account.sign_transaction(transaction, private_key)
 
     # Send the transaction
-    transaction_hash = w3.eth.sendRawTransaction(signed_transaction.rawTransaction)
+    transaction_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
 
-    return Response({'transaction_hash': transaction_hash})
+    return Response({'transaction_hash': transaction_hash.hex()})
 
 @api_view(['GET'])
 def get_votes_for_candidate(request, candidate_id):
@@ -70,24 +75,38 @@ def add_candidate(request):
     sender_address = request.data.get('sender_address')
     private_key = request.data.get('private_key')
 
+    # Ensure that the private key is a bytes object
+    #private_key = bytes.fromhex(private_key)
+
+    # Use the contract's 'addCandidate' function
     function = contract.functions.addCandidate(candidate_name)
-
+    
     # Build transaction parameters
-    nonce = w3.eth.getTransactionCount(sender_address)
+    nonce = w3.eth.get_transaction_count(sender_address)
     gas_price = w3.eth.gas_price
-    gas_limit = 100000  # Adjust gas limit based on your contract's complexity
 
-    transaction = function.buildTransaction({
+    # Estimate gas for the transaction
+    gas_estimate = function.estimate_gas({'from': sender_address})
+
+    gas_limit = 100000  # Adjust gas limit based on your contract's complexity
+    gas_limit = max(gas_limit, gas_estimate)
+    
+    # # Get the latest block
+    # latest_block = w3.eth.get_block('latest')
+
+    # Build transaction
+    transaction = function.build_transaction({
         'gas': gas_limit,
         'gasPrice': gas_price,
         'nonce': nonce,
-        'from': sender_address,
+        'from': sender_address
     })
 
     # Sign the transaction
     signed_transaction = w3.eth.account.sign_transaction(transaction, private_key)
 
     # Send the transaction
-    transaction_hash = w3.eth.sendRawTransaction(signed_transaction.rawTransaction)
+    transaction_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
 
-    return Response({'transaction_hash': transaction_hash})
+    return Response({'transaction_hash': transaction_hash.hex()})
+
