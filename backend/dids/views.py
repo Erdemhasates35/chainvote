@@ -11,12 +11,12 @@ from rest_framework.response import Response
 
 web3 = Web3(Web3.HTTPProvider('http://localhost:7545'))
 client = ipfshttpclient.connect('/ip4/127.0.0.1/tcp/5001')
-contract_file = os.path.join(os.getcwd(), "../solidity/decentralised_identity/build/contracts/DecentralizedIdentity.json")
+contract_file = os.path.join(os.getcwd(), "../voting_identity/build/contracts/DecentralizedIdentity.json")
 with open(contract_file, 'r') as file:
     data = json.load(file)
 
 contract_abi = data['abi']
-contract_address = '0xf9eec06980Ef79Df610f7Df49fc31342d4B0D383'
+contract_address = '0xf9eec06980Ef79Df610f7Df49fc31342d4B0D383' 
 
 class CreateIdentity(APIView):
     """View to create an identity"""

@@ -1,38 +1,47 @@
-from django.shortcuts import render
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 from web3 import Web3
 import json
 import os
 
-# Create your views here.
-web3 = Web3(Web3.HTTPProvider('http://localhost:7545'))
+w3 = Web3(Web3.HTTPProvider('http://localhost:7545'))
 
-contract_file = os.path.join(os.getcwd(), "voting_identity/build/contracts/DecentralizedVoting.json")
+contract_file = os.path.join(os.getcwd(), "../voting_identity/build/contracts/DecentralizedVoting.json")
 with open(contract_file, 'r') as file:
     data = json.load(file)
 
 voting_abi = data['abi']
-contract_address = '0xC24724d9c0F0f3C1B9945003F528204de539A5B4'
-
-
+contract_address = '0xfd1a9d2759fE9E4b641194408Eb1C8fa4624B8Cd'
 
 # Create a contract instance
-contract = web3.eth.contract(address=contract_address, abi=voting_abi)
+contract = w3.eth.contract(address=contract_address, abi=voting_abi)
 
-def get_candidate_count():
-    return contract.functions.candidateCount().call()
+@api_view(['GET'])
+def get_candidate_count(request):
+    candidate_count = contract.functions.candidateCount().call()
+    return Response({'candidate_count': candidate_count})
 
-def get_candidate_info(candidate_id):
-    return contract.functions.candidates(candidate_id).call()
+@api_view(['GET'])
+def get_candidate_info(request, candidate_id):
+    candidate_info = contract.functions.candidates(candidate_id).call()
+    return Response({'candidate_info': candidate_info})
 
-def get_voter_status(address):
-    return contract.functions.voters(address).call()
+@api_view(['GET'])
+def get_voter_status(request, address):
+    voter_status = contract.functions.voters(address).call()
+    return Response({'voter_status': voter_status})
 
-def vote(candidate_id, sender_address, private_key):
+@api_view(['POST'])
+def vote(request):
+    candidate_id = request.data.get('candidate_id')
+    sender_address = request.data.get('sender_address')
+    private_key = request.data.get('private_key')
+
     function = contract.functions.Vote(candidate_id)
 
     # Build transaction parameters
-    nonce = web3.eth.getTransactionCount(sender_address)
-    gas_price = web3.eth.gas_price
+    nonce = w3.eth.getTransactionCount(sender_address)
+    gas_price = w3.eth.gas_price
     gas_limit = 100000  # Adjust gas limit based on your contract's complexity
 
     transaction = function.buildTransaction({
@@ -43,23 +52,30 @@ def vote(candidate_id, sender_address, private_key):
     })
 
     # Sign the transaction
-    signed_transaction = web3.eth.account.sign_transaction(transaction, private_key)
+    signed_transaction = w3.eth.account.sign_transaction(transaction, private_key)
 
     # Send the transaction
-    transaction_hash = web3.eth.sendRawTransaction(signed_transaction.rawTransaction)
+    transaction_hash = w3.eth.sendRawTransaction(signed_transaction.rawTransaction)
 
-    return transaction_hash
+    return Response({'transaction_hash': transaction_hash})
 
-def get_votes_for_candidate(candidate_id):
-    return contract.functions.getVotesForCandidate(candidate_id).call()
+@api_view(['GET'])
+def get_votes_for_candidate(request, candidate_id):
+    votes_for_candidate = contract.functions.getVotesForCandidate(candidate_id).call()
+    return Response({'votes_for_candidate': votes_for_candidate})
 
-def add_candidate(candidate_name, sender_address, private_key):
+@api_view(['POST'])
+def add_candidate(request):
+    candidate_name = request.data.get('candidate_name')
+    sender_address = request.data.get('sender_address')
+    private_key = request.data.get('private_key')
+
     function = contract.functions.addCandidate(candidate_name)
 
     # Build transaction parameters
-    nonce = web3.eth.getTransactionCount(sender_address)
-    gas_price = web3.eth.gas_price
-    gas_limit = 300000  # Adjust gas limit based on your contract's complexity
+    nonce = w3.eth.getTransactionCount(sender_address)
+    gas_price = w3.eth.gas_price
+    gas_limit = 100000  # Adjust gas limit based on your contract's complexity
 
     transaction = function.buildTransaction({
         'gas': gas_limit,
@@ -69,9 +85,9 @@ def add_candidate(candidate_name, sender_address, private_key):
     })
 
     # Sign the transaction
-    signed_transaction = web3.eth.account.sign_transaction(transaction, private_key)
+    signed_transaction = w3.eth.account.sign_transaction(transaction, private_key)
 
     # Send the transaction
-    transaction_hash = web3.eth.sendRawTransaction(signed_transaction.rawTransaction)
+    transaction_hash = w3.eth.sendRawTransaction(signed_transaction.rawTransaction)
 
-    return transaction_hash
+    return Response({'transaction_hash': transaction_hash})
