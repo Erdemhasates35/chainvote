@@ -1,43 +1,153 @@
 import json
 import os
 
+from pyld import jsonld
+
 import ipfshttpclient
 from web3 import Web3
 from web3.exceptions import ContractLogicError
+
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+from datetime import datetime
 
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
+
+import uuid
 from chainvote.custom import settings
 
-# client = ipfshttpclient.connect('/ip4/127.0.0.1/tcp/5001')
-# contract_file = os.path.join(os.getcwd(), "../solidity/decentralised_identity/build/contracts/DecentralizedIdentity.json")
-# with open(contract_file, 'r') as file:
-#     data = json.load(file)
 
-# contract_abi = data['abi']
-# contract_address = '0xf9eec06980Ef79Df610f7Df49fc31342d4B0D383'
-# contract = web3.eth.contract(address=contract_address, abi=contract_abi)
-# credential_request_contract = object # placeholder
+class SetAccountByPrivateKey(APIView):
+    """Change the address of the account with your private key"""
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'private-key': openapi.Schema(type=openapi.TYPE_STRING, description='Private key of the account'),
+            },
+            required=['private-key'],
+        ),
+        responses={
+            201: openapi.Response(description='Account set successfully', schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'message': openapi.Schema(type=openapi.TYPE_STRING, description='Message indicating success'),
+                    'address': openapi.Schema(type=openapi.TYPE_STRING, description='Public key (address) of the account'),
+                }
+            )),
+            400: openapi.Response(description='Bad Request'),
+            500: openapi.Response(description='Internal Server Error'),
+        },
+        operation_description="Set the account for the ChainVote application using the provided private key. All transactions henceforth will be made with this account.",
+        tags=['Account'],
+    )
+    def post(self, request):
+        """Set the account for the chainvote application. Receive the private key and returns the public key.
+        All transactions henceforth will be made with this account
+        """
+        private_key = request.data['private-key']
+        address = settings.set_account(private_key)
+        resp = {"message":"OK",
+                "address":f"{address}"}
+        return Response(resp, status=status.HTTP_201_CREATED)
+    
 class CreateIdentity(APIView):
     """View to create an identity. Receives the address of the user creating the identity
     and the attributes of the identity in json
     """
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'data': openapi.Schema(type=openapi.TYPE_OBJECT, description='Attributes(data) of the identity in JSON format'),
+            },
+            required=['data'],
+        ),
+        responses={
+            201: openapi.Response(description='Identity created successfully'),
+            400: openapi.Response(description='Bad Request'),
+            500: openapi.Response(description='Internal Server Error'),
+        },
+        operation_description="Create an identity and a verifiable credential for an individual.\
+        Returns the ipfs hash of the verifiable credential and the transaction hash where the ipfs hash is stored.""",
+        tags=['Identity'],
+    )
     def post(self, request):
         # get the details of the identity
         data = request.data
+        # eth_address = settings.web3.eth.default_account.address
+        did = f"did:chainvote:{uuid.uuid4()}"
 
-        # hash the details and save in ipfs
-        ipfshash = settings.client.add_json(data)
+        context = {
+            "@context": {
+                # common properties to be determined later(or leave it empty)
+            }
+        }
+
+        compact_data = jsonld.compact(data, context)
+
+        vc = {
+            "@context": ["https://www.w3.org/2018/credentials/v1"],
+            "type": ["VerifiableCredential"],
+            "issuer": settings.inec_did,
+            "holder": f"{did}",
+            "credentialSubject": compact_data
+        }
+
+        vc_json = json.dumps(vc, separators=(',', ':'), sort_keys=True)
+
+        # generating RSA key pair
+        private_key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048,
+            backend=default_backend()
+        )
+        public_key = private_key.public_key()
+
+        # sign the Credential
+        signature = private_key.sign(
+            vc_json.encode('utf-8'),
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256()
+        )
+
+        # Construct the Proof Field
+        proof = {
+            "type": "RsaSignature2018",
+            "created": datetime.utcnow().isoformat(),
+            "proofPurpose": "assertionMethod",
+            "verificationMethod": "did:example:123#key-1",
+            "signatureValue": signature.hex()
+        }
+
+        # Add the Proof Field to the Credential
+        vc["proof"] = proof
+
+        
+
+        # hash the vc and save in ipfs
+        ipfshash = settings.client.add_json(vc)
         # call smart contract and save ipfs hash
         try:
             tx_hash = settings.identity_contract.functions.createIdentity(ipfshash).transact({"from": settings.web3.eth.default_account.address})
             tx_data = settings.web3.eth.wait_for_transaction_receipt(tx_hash)
             resp = {
-            "txn":f"{tx_data}"
+            "vc_ipfs_hash": ipfshash,
+            "txn_hash":f"{tx_data['transactionHash']}"
         }
         except ContractLogicError as e:
             resp = {
@@ -55,6 +165,20 @@ class getIdentity(APIView):
     Receives the eth address of the user and returns the list of the users data
     """
 
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response(description='Success', schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'ipfshash': openapi.Schema(type=openapi.TYPE_STRING, description='IPFS hash of the identity'),
+                    'identity': openapi.Schema(type=openapi.TYPE_STRING, description='Identity data retrieved from IPFS'),
+                }
+            )),
+            500: openapi.Response(description='Internal Server Error'),
+        },
+        operation_description="Retrieve a list of the user's data by calling a smart contract to get the identity and fetching data from IPFS.",
+        tags=['Identity'],
+    )
     def get(self, request):
         # call smart conrarct to get list of identiy of a user
         identity = settings.identity_contract.functions.getIdentity().call({"from": settings.web3.eth.default_account.address})

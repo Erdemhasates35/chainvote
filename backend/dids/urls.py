@@ -19,6 +19,7 @@ from . import views
 
 
 urlpatterns = [
+    path('set-account/', views.SetAccountByPrivateKey.as_view(), name="set-account"),
     path('create/', views.CreateIdentity.as_view(), name="create-identity"),
     path('get/', views.getIdentity.as_view(), name="get-identity"),
     path('credential/request/', views.RegisterForCredential.as_view(), name="request-credential"),

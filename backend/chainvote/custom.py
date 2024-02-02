@@ -2,7 +2,6 @@ import ipfshttpclient
 import os
 import json
 
-
 from web3 import Web3
 from dotenv import load_dotenv
 
@@ -38,9 +37,16 @@ class Config:
         self.CREDENTIAL_CONTRACT_ABI = self.credential_data['abi']
         self.CREDENTIAL_CONTRACT_ADDRESS = '0x23c5B395615255b94Fe277e13aEfCAF6CCbCCCD2'
 
+        self.INEC_ADDRESS = "0x076E874E4B24fbe9342908462c022645e5D0cac5"
+
+        self.inec_did = "did:vote:20c15797-65e5-4eb5-b9d7-c0fd37a3e6a3"
+
         self.request_contract = Config.web3.eth.contract(address=self.REQUEST_CONTRACT_ADDRESS, abi=self.REQUEST_CONTRACT_ABI)
         self.credential_contract = Config.web3.eth.contract(address=self.CREDENTIAL_CONTRACT_ADDRESS, abi=self.CREDENTIAL_CONTRACT_ABI)
         self.identity_contract = Config.web3.eth.contract(address=self.IDENTITY_CONTRACT_ADDRESS, abi=self.IDENTITY_CONTRACT_ABI)
 
+    def set_account(self, private_key):
+        self.web3.eth.default_account = self.web3.eth.account.from_key(private_key)
+        return self.web3.eth.default_account.address
 
 settings = Config()
