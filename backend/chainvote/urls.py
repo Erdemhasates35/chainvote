@@ -37,7 +37,7 @@ schema_view = get_schema_view(
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('identity/', include("dids.urls")),
-    # path('voting/', include("voting.urls"))
+    path('voting/', include("voting.urls"))
 ]
 
 urlpatterns += [

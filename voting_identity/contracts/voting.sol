@@ -13,7 +13,7 @@ contract DecentralizedVoting {
     uint public candidateCount;
 
 
-    function addCandidate (string memory _name) private {
+    function addCandidate (string memory _name) public {
         candidateCount ++;
         candidates[candidateCount] = Candidate(candidateCount, _name, 0);
     }
