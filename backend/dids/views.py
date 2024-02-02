@@ -3,14 +3,14 @@ import os
 
 import ipfshttpclient
 from web3 import Web3
+from web3.exceptions import ContractLogicError
 
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from django.conf import settings
+from chainvote.custom import settings
 
-# web3.eth.default_account = web3.eth.account.from_key(PRIVATE_KEY)
 # client = ipfshttpclient.connect('/ip4/127.0.0.1/tcp/5001')
 # contract_file = os.path.join(os.getcwd(), "../solidity/decentralised_identity/build/contracts/DecentralizedIdentity.json")
 # with open(contract_file, 'r') as file:
@@ -28,16 +28,26 @@ class CreateIdentity(APIView):
 
     def post(self, request):
         # get the details of the identity
-        data = request.data['data']
+        data = request.data
 
         # hash the details and save in ipfs
         ipfshash = settings.client.add_json(data)
         # call smart contract and save ipfs hash
-        tx_hash = settings.identity_contract.functions.createIdentity(ipfshash).transact()
-        tx_data = settings.web3.eth.wait_for_transaction_receipt(tx_hash)
-        resp = {
+        try:
+            tx_hash = settings.identity_contract.functions.createIdentity(ipfshash).transact({"from": settings.web3.eth.default_account.address})
+            tx_data = settings.web3.eth.wait_for_transaction_receipt(tx_hash)
+            resp = {
             "txn":f"{tx_data}"
         }
+        except ContractLogicError as e:
+            resp = {
+            "message":f"Error in creating identity: {e}"
+            }
+        except Exception as e:
+            resp = {
+            "message":f"Internal Error: {e}"
+            }
+        
         return Response(resp, status=status.HTTP_201_CREATED)
 
 class getIdentity(APIView):
@@ -45,12 +55,12 @@ class getIdentity(APIView):
     Receives the eth address of the user and returns the list of the users data
     """
 
-    def get(self, request, address):
+    def get(self, request):
         # call smart conrarct to get list of identiy of a user
-        identity = settings.identity_contract.functions.getIdentity().call()
-
-        actual_data = settings.client.cat(identity[0])
+        identity = settings.identity_contract.functions.getIdentity().call({"from": settings.web3.eth.default_account.address})
+        actual_data = settings.client.cat(identity)
         resp = {
+            "ipfshash":identity,
             "identity":actual_data
         }
         return Response(resp, status=status.HTTP_200_OK)
@@ -68,7 +78,7 @@ class RegisterForCredential(APIView):
         # owner = request.data.get('address')
         identity = request.data.get('ipfshash')
 
-        request_tx_hash = settings.credential_contract.functions.createRequest(identity).transact()
+        request_tx_hash = settings.credential_contract.functions.createRequest(identity).transact({"from": settings.web3.eth.default_account.address})
         tx_receipt = settings.web3.eth.wait_for_transaction_receipt(request_tx_hash)
 
         if tx_receipt.status ==1:
@@ -79,7 +89,7 @@ class RegisterForCredential(APIView):
             }
             return Response(resp, status=status.HTTP_201_CREATED)
         else:
-                return Response({"message": "Failed to create request for credential"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"message": "Failed to create request for credential"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 # class UserCredentialRequest(APIView):
 #     """A view to get all the credentials requested by a user

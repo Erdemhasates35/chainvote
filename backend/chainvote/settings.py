@@ -125,35 +125,35 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-import ipfshttpclient
-import os
-import json
+# import ipfshttpclient
+# import os
+# import json
 
-from web3 import Web3
+# from web3 import Web3
 
-web3 = Web3(Web3.HTTPProvider('http://localhost:7545'))
-client = ipfshttpclient.connect('/ip4/127.0.0.1/tcp/5001')
-identity_contract_file = os.path.join(os.getcwd(), "../solidity/decentralised_identity/build/contracts/DecentralizedIdentity.json")
-request_contract_file = os.path.join(os.getcwd(), "../solidity/decentralised_identity/build/contracts/VerifiableCredentialIssuer.json")
-credential_contract_file= os.path.join(os.getcwd(), "../solidity/decentralised_identity/build/contracts/VerifiableCredentialRequest.json")
+# web3 = Web3(Web3.HTTPProvider('http://localhost:7545'))
+# client = ipfshttpclient.connect('/ip4/127.0.0.1/tcp/5001')
+# identity_contract_file = os.path.join(os.getcwd(), "../voting_identity/build/contracts/DecentralizedIdentity.json")
+# request_contract_file = os.path.join(os.getcwd(), "../voting_identity/build/contracts/VerifiableCredentialIssuer.json")
+# credential_contract_file= os.path.join(os.getcwd(), "../voting_identity/build/contracts/VerifiableCredentialRequest.json")
 
-with open(identity_contract_file, 'r') as file:
-    identity_data = json.load(file)
-with open(request_contract_file, 'r') as file:
-    request_data = json.load(file)
-with open(credential_contract_file, 'r') as file:
-    credential_data = json.load(file)
+# with open(identity_contract_file, 'r') as file:
+#     identity_data = json.load(file)
+# with open(request_contract_file, 'r') as file:
+#     request_data = json.load(file)
+# with open(credential_contract_file, 'r') as file:
+#     credential_data = json.load(file)
 
-IDENTITY_CONTRACT_ABI = identity_data['abi']
-IDENTITY_CONTRACT_ADDRESS = '0xf0d10CFF06AE60599f6402F5aC2aA361E0B02C8a'
+# IDENTITY_CONTRACT_ABI = identity_data['abi']
+# IDENTITY_CONTRACT_ADDRESS = '0xf0d10CFF06AE60599f6402F5aC2aA361E0B02C8a'
 
-REQUEST_CONTRACT_ABI = request_data['abi']
-REQUEST_CONTRACT_ADDRESS = '0xF70ac27FbeaE7EBB5788C18794adc73126A6bAea'
+# REQUEST_CONTRACT_ABI = request_data['abi']
+# REQUEST_CONTRACT_ADDRESS = '0xF70ac27FbeaE7EBB5788C18794adc73126A6bAea'
 
-CREDENTIAL_CONTRACT_ABI = credential_data['abi']
-CREDENTIAL_CONTRACT_ADDRESS = '0x33970254CC70BA399830f45fC9f0E3EA55C77572'
+# CREDENTIAL_CONTRACT_ABI = credential_data['abi']
+# CREDENTIAL_CONTRACT_ADDRESS = '0x33970254CC70BA399830f45fC9f0E3EA55C77572'
 
-request_contract = web3.eth.contract(address=REQUEST_CONTRACT_ADDRESS, abi=REQUEST_CONTRACT_ABI)
-credential_contract = web3.eth.contract(address=CREDENTIAL_CONTRACT_ADDRESS, abi=CREDENTIAL_CONTRACT_ABI)
-identity_contract = web3.eth.contract(address=IDENTITY_CONTRACT_ADDRESS, abi=IDENTITY_CONTRACT_ABI)
+# request_contract = web3.eth.contract(address=REQUEST_CONTRACT_ADDRESS, abi=REQUEST_CONTRACT_ABI)
+# credential_contract = web3.eth.contract(address=CREDENTIAL_CONTRACT_ADDRESS, abi=CREDENTIAL_CONTRACT_ABI)
+# identity_contract = web3.eth.contract(address=IDENTITY_CONTRACT_ADDRESS, abi=IDENTITY_CONTRACT_ABI)
 
